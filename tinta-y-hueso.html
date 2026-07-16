@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tinta & Hueso — Estudio de tatuaje</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Bebas+Neue&family=Jost:wght@300;400;500;600&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink-black:#14110d;
+    --ink-black-2:#1c1812;
+    --ink-black-3:#231e16;
+    --bone:#e8ddc7;
+    --bone-dim:#a89a7c;
+    --blood:#7a1f1f;
+    --blood-bright:#a9312c;
+    --gold:#c9a24b;
+    --line:#3a3327;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    background:var(--ink-black);
+    color:var(--bone);
+    font-family:'Jost',sans-serif;
+    font-weight:300;
+    overflow-x:hidden;
+  }
+
+  ::selection{background:var(--blood);color:var(--bone);}
+
+  .wordmark{font-family:'UnifrakturMaguntia',cursive;}
+  .poster{font-family:'Bebas Neue',sans-serif;letter-spacing:.04em;}
+  .stamp{font-family:'Special Elite',monospace;}
+
+  a{color:inherit;text-decoration:none;}
+
+  /* ---------- background texture ---------- */
+  .grain{
+    position:fixed;inset:0;pointer-events:none;z-index:999;
+    opacity:.05;mix-blend-mode:overlay;
+    background-image:radial-gradient(var(--bone) 0.6px, transparent 0.6px);
+    background-size:3px 3px;
+  }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:1.4rem 6vw;
+    background:linear-gradient(var(--ink-black) 40%, transparent);
+  }
+  nav .brand{font-family:'UnifrakturMaguntia',cursive;font-size:1.5rem;color:var(--bone);}
+  nav ul{display:flex;gap:2.2rem;list-style:none;}
+  nav ul li a{
+    font-family:'Special Elite',monospace;font-size:.72rem;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--bone-dim);
+    transition:color .3s;
+  }
+  nav ul li a:hover{color:var(--blood-bright);}
+  @media (max-width:720px){ nav ul{display:none;} }
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    position:relative;text-align:center;padding:0 5vw;
+  }
+  .hero .eyebrow{
+    font-family:'Special Elite',monospace;font-size:.78rem;letter-spacing:.3em;
+    text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;
+  }
+  .hero h1{
+    font-family:'UnifrakturMaguntia',cursive;
+    font-size:clamp(3rem,10vw,7rem);
+    color:var(--bone);
+    line-height:1;
+    text-shadow:0 0 40px rgba(122,31,31,.25);
+  }
+  .hero h1 span{color:var(--blood-bright);}
+  .hero p.tagline{
+    margin-top:1.4rem;font-size:1rem;color:var(--bone-dim);
+    letter-spacing:.05em;max-width:32ch;
+  }
+  .hero .art{
+    width:min(70vw,320px);margin:2.4rem auto 0;
+  }
+  .hero .scroll-cue{
+    position:absolute;bottom:2.6rem;left:50%;transform:translateX(-50%);
+    font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.25em;
+    text-transform:uppercase;color:var(--bone-dim);
+    display:flex;flex-direction:column;align-items:center;gap:.5rem;
+  }
+  .scroll-cue .stem{width:1px;height:34px;background:var(--bone-dim);position:relative;overflow:hidden;}
+  .scroll-cue .stem::after{
+    content:"";position:absolute;top:-100%;left:0;width:100%;height:100%;
+    background:var(--gold);
+    animation:cueDrop 1.8s ease-in-out infinite;
+  }
+  @keyframes cueDrop{ to{ top:100%; } }
+
+  /* ---------- draw-in svg paths (progressive enhancement) ---------- */
+  .draw-path{
+    fill:none;stroke:var(--gold);stroke-width:1.6;
+    stroke-linecap:round;stroke-linejoin:round;
+  }
+  .draw-path.small{stroke:var(--bone);stroke-width:2;}
+
+  @keyframes drawIn{ to{ stroke-dashoffset:0; } }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(28px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* Modern scroll-driven animation: hero art draws in as whole page scrolls */
+  @supports (animation-timeline: scroll()){
+    .hero-draw-path{
+      animation:drawIn linear forwards;
+      animation-timeline:scroll(root);
+      animation-range:0 60vh;
+    }
+    .reveal{
+      animation:fadeUp linear both;
+      animation-timeline:view();
+      animation-range:entry 0% cover 35%;
+    }
+    .icon-draw{
+      animation:drawIn linear forwards;
+      animation-timeline:view();
+      animation-range:entry 10% cover 55%;
+    }
+  }
+
+  /* Fallback (JS-driven) for browsers without animation-timeline */
+  .no-scroll-timeline .reveal{ opacity:0; transform:translateY(28px); transition:opacity .8s ease, transform .8s ease; }
+  .no-scroll-timeline .reveal.in-view{ opacity:1; transform:translateY(0); }
+  .no-scroll-timeline .icon-draw{ transition:stroke-dashoffset 1s ease; }
+
+  section{position:relative;padding:8rem 6vw;max-width:1180px;margin:0 auto;}
+
+  .eyebrow-label{
+    font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--gold);display:block;margin-bottom:1rem;
+  }
+  h2.section-title{
+    font-family:'Bebas Neue',sans-serif;font-size:clamp(2.2rem,5vw,3.6rem);
+    letter-spacing:.03em;color:var(--bone);line-height:1;
+  }
+  .section-intro{max-width:56ch;color:var(--bone-dim);margin-top:1.1rem;font-size:1.02rem;line-height:1.7;}
+
+  hr.divider{border:none;border-top:1px solid var(--line);margin:0 0 5rem;}
+
+  /* ---------- manifiesto ---------- */
+  .manifesto blockquote{
+    font-family:'UnifrakturMaguntia',cursive;
+    font-size:clamp(1.6rem,4vw,2.6rem);
+    color:var(--bone);line-height:1.3;text-align:center;max-width:20ch;margin:0 auto;
+  }
+  .manifesto blockquote span{color:var(--blood-bright);}
+
+  /* ---------- estilos grid ---------- */
+  .styles-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+    background:var(--line);margin-top:3rem;border:1px solid var(--line);
+  }
+  @media (max-width:820px){ .styles-grid{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .styles-grid{grid-template-columns:1fr;} }
+  .style-card{
+    background:var(--ink-black);padding:2.6rem 1.8rem;
+    display:flex;flex-direction:column;gap:1rem;align-items:flex-start;
+    transition:background .35s;
+  }
+  .style-card:hover{background:var(--ink-black-2);}
+  .style-card svg{width:52px;height:52px;}
+  .style-card h3{font-family:'Bebas Neue',sans-serif;font-size:1.35rem;letter-spacing:.03em;color:var(--bone);}
+  .style-card p{color:var(--bone-dim);font-size:.9rem;line-height:1.55;}
+
+  /* ---------- proceso ---------- */
+  .process-list{margin-top:3rem;border-top:1px solid var(--line);}
+  .process-item{
+    display:grid;grid-template-columns:90px 1fr;gap:2rem;
+    padding:2.2rem 0;border-bottom:1px solid var(--line);align-items:start;
+  }
+  .process-item .num{
+    font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--blood-bright);line-height:1;
+  }
+  .process-item h3{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.02em;margin-bottom:.5rem;color:var(--bone);}
+  .process-item p{color:var(--bone-dim);font-size:.95rem;max-width:60ch;line-height:1.65;}
+
+  /* ---------- artistas ---------- */
+  .artist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4rem;margin-top:3rem;}
+  @media (max-width:820px){ .artist-grid{grid-template-columns:1fr;} }
+  .artist-card{border:1px solid var(--line);padding:2rem;background:var(--ink-black-2);}
+  .artist-card .avatar{
+    width:100%;aspect-ratio:1;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;margin-bottom:1.4rem;
+    background:var(--ink-black-3);
+  }
+  .artist-card .avatar svg{width:60%;height:60%;}
+  .artist-card h3{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--bone);}
+  .artist-card .role{font-family:'Special Elite',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin:.3rem 0 .8rem;}
+  .artist-card p{color:var(--bone-dim);font-size:.88rem;line-height:1.6;}
+
+  /* ---------- galeria ---------- */
+  .gallery-scroll{
+    display:flex;gap:1.2rem;overflow-x:auto;margin-top:3rem;padding-bottom:1.4rem;
+    scroll-snap-type:x mandatory;
+  }
+  .gallery-scroll::-webkit-scrollbar{height:5px;}
+  .gallery-scroll::-webkit-scrollbar-thumb{background:var(--line);}
+  .flash-card{
+    flex:0 0 240px;aspect-ratio:3/4;border:1px solid var(--line);
+    background:var(--ink-black-2);scroll-snap-align:start;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;
+    padding:1.4rem;
+  }
+  .flash-card svg{width:70%;height:auto;}
+  .flash-card span{font-family:'Special Elite',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--bone-dim);}
+
+  /* ---------- reservar ---------- */
+  .book-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:4rem;margin-top:3rem;}
+  @media (max-width:820px){ .book-grid{grid-template-columns:1fr;} }
+  form{display:flex;flex-direction:column;gap:1.3rem;}
+  .field{display:flex;flex-direction:column;gap:.5rem;}
+  .field label{font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.15em;text-transform:uppercase;color:var(--bone-dim);}
+  .field input,.field select,.field textarea{
+    background:transparent;border:none;border-bottom:1px solid var(--line);
+    color:var(--bone);font-family:'Jost',sans-serif;font-size:1rem;padding:.6rem 0;
+    outline:none;transition:border-color .3s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--blood-bright);}
+  .field textarea{resize:vertical;min-height:80px;}
+  .submit-btn{
+    margin-top:.6rem;align-self:flex-start;
+    font-family:'Special Elite',monospace;font-size:.78rem;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--bone);background:transparent;border:1px solid var(--bone);
+    padding:.95rem 2.2rem;cursor:pointer;transition:all .35s;
+  }
+  .submit-btn:hover{background:var(--blood);border-color:var(--blood);color:var(--bone);}
+
+  .info-block{border-left:1px solid var(--line);padding-left:2.4rem;}
+  .info-block h3{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;letter-spacing:.03em;margin-bottom:.6rem;color:var(--gold);}
+  .info-block p{color:var(--bone-dim);font-size:.92rem;line-height:1.75;margin-bottom:1.6rem;}
+
+  footer{
+    border-top:1px solid var(--line);padding:3rem 6vw;
+    display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;
+  }
+  footer .brand{font-family:'UnifrakturMaguntia',cursive;font-size:1.3rem;color:var(--bone-dim);}
+  footer small{font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.08em;color:var(--bone-dim);}
+
+  /* ---------- photography ---------- */
+  .photo{
+    width:100%;height:100%;object-fit:cover;display:block;
+    filter:grayscale(45%) sepia(18%) saturate(140%) brightness(.75) contrast(1.05);
+  }
+
+  .hero{ overflow:hidden; }
+  .hero-bg{
+    position:absolute;inset:0;z-index:-2;
+  }
+  .hero-bg img{width:100%;height:100%;object-fit:cover;filter:grayscale(35%) sepia(22%) saturate(160%) brightness(.4) contrast(1.1);}
+  .hero-bg::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(20,17,13,.55) 0%, rgba(20,17,13,.75) 55%, var(--ink-black) 100%);
+  }
+
+  /* ---------- stats bar ---------- */
+  .stats-bar{
+    display:grid;grid-template-columns:repeat(4,1fr);
+    border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+    max-width:1180px;margin:0 auto;padding:0;
+  }
+  @media (max-width:700px){ .stats-bar{grid-template-columns:repeat(2,1fr);} }
+  .stat{
+    padding:2.6rem 1.5rem;text-align:center;border-right:1px solid var(--line);
+  }
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:'Bebas Neue',sans-serif;font-size:2.6rem;color:var(--blood-bright);line-height:1;}
+  .stat .label{font-family:'Special Elite',monospace;font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--bone-dim);margin-top:.6rem;display:block;}
+
+  /* ---------- sobre el estudio ---------- */
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:3.6rem;align-items:center;margin-top:3rem;}
+  @media (max-width:820px){ .about-grid{grid-template-columns:1fr;} }
+  .about-photo{aspect-ratio:4/5;border:1px solid var(--line);position:relative;overflow:hidden;}
+  .about-photo .badge{
+    position:absolute;bottom:1rem;left:1rem;background:rgba(20,17,13,.85);
+    border:1px solid var(--gold);padding:.6rem 1rem;
+    font-family:'Special Elite',monospace;font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);
+  }
+  .about-copy p{color:var(--bone-dim);font-size:.98rem;line-height:1.8;margin-bottom:1.2rem;}
+  .badge-row{display:flex;gap:1.6rem;flex-wrap:wrap;margin-top:1.8rem;}
+  .badge-row .item{display:flex;align-items:center;gap:.6rem;font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--bone-dim);}
+  .badge-row .item svg{width:20px;height:20px;flex-shrink:0;}
+
+  /* ---------- galeria fotos ---------- */
+  .photo-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:1.4rem;}
+  @media (max-width:700px){ .photo-strip{grid-template-columns:repeat(2,1fr);} }
+  .photo-strip .cell{aspect-ratio:3/4;overflow:hidden;background:var(--ink-black-2);position:relative;}
+  .photo-strip .cell img{transition:transform .6s ease;}
+  .photo-strip .cell:hover img{transform:scale(1.06);}
+  .photo-strip .cell .tag{
+    position:absolute;bottom:.8rem;left:.8rem;font-family:'Special Elite',monospace;font-size:.6rem;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--bone);background:rgba(20,17,13,.7);padding:.3rem .6rem;
+  }
+
+  /* ---------- testimonios ---------- */
+  .testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line);border:1px solid var(--line);margin-top:3rem;}
+  @media (max-width:820px){ .testi-grid{grid-template-columns:1fr;} }
+  .testi-card{background:var(--ink-black);padding:2.2rem 1.8rem;display:flex;flex-direction:column;gap:1rem;}
+  .testi-card .stars{color:var(--gold);font-size:.85rem;letter-spacing:.2em;}
+  .testi-card p{color:var(--bone-dim);font-size:.92rem;line-height:1.7;font-style:italic;}
+  .testi-card .who{font-family:'Special Elite',monospace;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--bone);}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important;}
+    .draw-path{stroke-dashoffset:0 !important;}
+    .reveal{opacity:1 !important;transform:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<nav>
+  <a href="#top" class="brand">Tinta & Hueso</a>
+  <ul>
+    <li><a href="#estudio">Estudio</a></li>
+    <li><a href="#estilos">Estilos</a></li>
+    <li><a href="#proceso">Proceso</a></li>
+    <li><a href="#artistas">Artistas</a></li>
+    <li><a href="#galeria">Galería</a></li>
+    <li><a href="#reservar">Reservar</a></li>
+  </ul>
+</nav>
+
+<header class="hero" id="top">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1745777723328-6228e34ed2aa?w=1600&auto=format&fit=crop&q=70" alt="" loading="eager">
+  </div>
+  <span class="eyebrow">Estudio de tatuaje &mdash; Medellín</span>
+  <h1>Tinta <span>&</span> Hueso</h1>
+  <p class="tagline">Cada línea se queda. La hacemos con calma, con aguja fina y con respeto por tu piel.</p>
+
+  <div class="art">
+    <svg viewBox="0 0 300 380" width="100%" aria-hidden="true">
+      <g id="heroArt" fill="none" stroke="var(--gold)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path class="draw-path hero-draw-path" id="daggerBlade" d="M150 20 L165 140 L150 175 L135 140 Z" />
+        <path class="draw-path hero-draw-path" id="daggerGuard" d="M112 140 L188 140 M118 148 L182 148" />
+        <path class="draw-path hero-draw-path" id="daggerHandle" d="M150 148 L150 235" />
+        <path class="draw-path hero-draw-path" id="daggerPommel" d="M132 235 Q150 258 168 235 Q150 248 132 235 Z" />
+        <path class="draw-path hero-draw-path" id="banner" d="M40 205 Q90 190 150 205 Q210 190 260 205 L245 218 Q210 206 150 218 Q90 206 55 218 Z" />
+        <path class="draw-path hero-draw-path" id="bannerCurlL" d="M40 205 Q22 205 24 222 Q26 236 44 230" />
+        <path class="draw-path hero-draw-path" id="bannerCurlR" d="M260 205 Q278 205 276 222 Q274 236 256 230" />
+        <path class="draw-path hero-draw-path" id="roseL" d="M92 260 Q70 248 74 228 Q92 236 92 258 Q76 244 92 260 Z" />
+        <path class="draw-path hero-draw-path" id="roseR" d="M208 260 Q230 248 226 228 Q208 236 208 258 Q224 244 208 260 Z" />
+        <path class="draw-path hero-draw-path" id="stemL" d="M92 260 Q100 290 90 320" />
+        <path class="draw-path hero-draw-path" id="stemR" d="M208 260 Q200 290 210 320" />
+      </g>
+    </svg>
+  </div>
+
+  <div class="scroll-cue"><span>Desliza</span><div class="stem"></div></div>
+</header>
+
+<div class="stats-bar reveal">
+  <div class="stat"><span class="num">11</span><span class="label">Años activos</span></div>
+  <div class="stat"><span class="num">3</span><span class="label">Artistas residentes</span></div>
+  <div class="stat"><span class="num">2400+</span><span class="label">Tatuajes realizados</span></div>
+  <div class="stat"><span class="num">4.9</span><span class="label">Valoración promedio</span></div>
+</div>
+
+<section class="manifesto reveal">
+  <blockquote>La aguja no olvida. <span>Tampoco nosotros.</span></blockquote>
+</section>
+
+<section id="estudio">
+  <span class="eyebrow-label reveal">Quiénes somos</span>
+  <h2 class="section-title reveal">El estudio</h2>
+  <div class="about-grid">
+    <div class="about-photo reveal">
+      <img class="photo" src="https://images.unsplash.com/photo-1665019771452-55140aea1b61?w=900&auto=format&fit=crop&q=70" alt="Máquina de tatuar sobre mesa de trabajo del estudio">
+      <span class="badge">Equipo esterilizado por sesión</span>
+    </div>
+    <div class="about-copy reveal">
+      <p>Tinta & Hueso abrió sus puertas en El Poblado en 2015, con una idea simple: un tatuaje bien hecho necesita tiempo, buena luz y un artista que escuche antes de dibujar.</p>
+      <p>Hoy somos tres artistas residentes trabajando bajo un mismo techo, cada uno con su propio lenguaje visual, pero con los mismos estándares de bioseguridad y la misma calma en cada sesión.</p>
+      <div class="badge-row">
+        <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3 L20 7 V12 C20 17 16.4 20.4 12 21 C7.6 20.4 4 17 4 12 V7 Z"/><path d="M8.5 12 L11 14.5 L16 9" /></svg>Material de un solo uso</span>
+        <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="9"/><path d="M12 7 V12 L15.5 14"/></svg>Sesiones con cita previa</span>
+        <span class="item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 20 V10 L12 4 L20 10 V20 Z"/><path d="M9 20 V13 H15 V20"/></svg>Licencia sanitaria vigente</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="estilos">
+  <span class="eyebrow-label reveal">Especialidades</span>
+  <h2 class="section-title reveal">Estilos que trabajamos</h2>
+  <p class="section-intro reveal">Seis lenguajes distintos de tatuaje, cada uno con su propia disciplina de aguja, tiempo de sesión y cuidado posterior.</p>
+
+  <div class="styles-grid">
+    <div class="style-card reveal">
+      <svg viewBox="0 0 60 60"><path class="draw-path icon-draw" d="M10 45 Q30 10 50 45" /></svg>
+      <h3>Fine line</h3>
+      <p>Trazo fino y continuo, ideal para diseños delicados y minimalistas.</p>
+    </div>
+    <div class="style-card reveal">
+      <svg viewBox="0 0 60 60"><path class="draw-path icon-draw" d="M15 15 L45 15 L45 45 L15 45 Z M22 22 L38 38 M38 22 L22 38" /></svg>
+      <h3>Blackwork</h3>
+      <p>Negro sólido y geometría de alto contraste, piezas que se sienten permanentes.</p>
+    </div>
+    <div class="style-card reveal">
+      <svg viewBox="0 0 60 60"><path class="draw-path icon-draw" d="M30 12 Q42 20 40 34 Q38 46 30 48 Q22 46 20 34 Q18 20 30 12 Z" /></svg>
+      <h3>Neotradicional</h3>
+      <p>Color saturado, líneas gruesas y motivos ilustrados con carácter propio.</p>
+    </div>
+    <div class="style-card reveal">
+      <svg viewBox="0 0 60 60"><path class="draw-path icon-draw" d="M8 35 Q18 20 28 35 Q38 20 48 35 Q38 50 28 35 Q18 50 8 35 Z" /></svg>
+      <h3>Japonés (Irezumi)</h3>
+      <p>Composiciones grandes, olas y criaturas míticas con narrativa completa.</p>
+    </div>
+    <div class="style-card reveal">
+      <svg viewBox="0 0 60 60"><circle class="draw-path icon-draw" cx="30" cy="30" r="16"/><circle class="draw-path icon-draw" cx="30" cy="30" r="4"/></svg>
+      <h3>Realismo</h3>
+      <p>Retratos y texturas con sombreado fino, fotografía hecha piel.</p>
+    </div>
+    <div class="style-card reveal">
+      <svg viewBox="0 0 60 60"><path class="draw-path icon-draw" d="M10 40 Q20 15 30 30 Q40 45 50 20" /></svg>
+      <h3>Lettering</h3>
+      <p>Caligrafía a mano, cada letra trazada para tu frase, tu nombre, tu historia.</p>
+    </div>
+  </div>
+</section>
+
+<section id="proceso">
+  <span class="eyebrow-label reveal">Cómo trabajamos</span>
+  <h2 class="section-title reveal">El proceso</h2>
+  <p class="section-intro reveal">Cuatro pasos, siempre en el mismo orden, para que sepas exactamente qué esperar.</p>
+
+  <div class="process-list">
+    <div class="process-item reveal">
+      <span class="num">01</span>
+      <div><h3>Consulta</h3><p>Conversamos sobre tu idea, referencias, tamaño y ubicación en el cuerpo. Sin costo, sin compromiso.</p></div>
+    </div>
+    <div class="process-item reveal">
+      <span class="num">02</span>
+      <div><h3>Diseño</h3><p>El artista prepara un boceto exclusivo para vos. Ajustamos detalles hasta que quede exacto.</p></div>
+    </div>
+    <div class="process-item reveal">
+      <span class="num">03</span>
+      <div><h3>Sesión</h3><p>Trabajamos con material estéril de un solo uso, en un espacio tranquilo y con pausas a tu ritmo.</p></div>
+    </div>
+    <div class="process-item reveal">
+      <span class="num">04</span>
+      <div><h3>Cuidado</h3><p>Te entregamos indicaciones claras de cicatrización y quedamos disponibles para cualquier duda.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="artistas">
+  <span class="eyebrow-label reveal">El equipo</span>
+  <h2 class="section-title reveal">Artistas residentes</h2>
+  <p class="section-intro reveal">Tres manos, tres miradas. Elegí según el estilo que buscás.</p>
+
+  <div class="artist-grid">
+    <div class="artist-card reveal">
+      <div class="avatar"><svg viewBox="0 0 60 60"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M8 35 Q18 20 28 35 Q38 20 48 35 Q38 50 28 35 Q18 50 8 35 Z" /></svg></div>
+      <h3>Rosa Duarte</h3>
+      <div class="role">Neotradicional / Color</div>
+      <p>Diez años de oficio, especializada en piezas grandes de flora y fauna con paleta viva.</p>
+    </div>
+    <div class="artist-card reveal">
+      <div class="avatar"><svg viewBox="0 0 60 60"><circle class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" cx="30" cy="30" r="16"/><circle class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" cx="30" cy="30" r="4"/></svg></div>
+      <h3>Iván Restrepo</h3>
+      <div class="role">Realismo / Retrato</div>
+      <p>Formado en dibujo académico, transforma fotografías en sombreado hiperdetallado.</p>
+    </div>
+    <div class="artist-card reveal">
+      <div class="avatar"><svg viewBox="0 0 60 60"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M10 45 Q30 10 50 45" /></svg></div>
+      <h3>Camila Osorio</h3>
+      <div class="role">Fine line / Lettering</div>
+      <p>Trazo mínimo y preciso, ideal para primeros tatuajes y diseños delicados.</p>
+    </div>
+  </div>
+</section>
+
+<section id="galeria">
+  <span class="eyebrow-label reveal">Flash disponible</span>
+  <h2 class="section-title reveal">Galería</h2>
+  <p class="section-intro reveal">Un vistazo real al estudio en plena sesión, y debajo, diseños de línea listos para agendar esta semana.</p>
+
+  <div class="photo-strip reveal">
+    <div class="cell"><img class="photo" src="https://images.unsplash.com/photo-1745777723328-6228e34ed2aa?w=500&auto=format&fit=crop&q=70" alt="Artista tatuando durante una sesión"><span class="tag">En sesión</span></div>
+    <div class="cell"><img class="photo" src="https://images.unsplash.com/photo-1671136880406-1ad617787bf5?w=500&auto=format&fit=crop&q=70" alt="Detalle de tatuaje recién terminado en el antebrazo"><span class="tag">Detalle</span></div>
+    <div class="cell"><img class="photo" src="https://images.unsplash.com/photo-1643513456892-437e82e06f4a?w=500&auto=format&fit=crop&q=70" alt="Cliente recibiendo un tatuaje"><span class="tag">Piel</span></div>
+    <div class="cell"><img class="photo" src="https://images.unsplash.com/photo-1665019771452-55140aea1b61?w=500&auto=format&fit=crop&q=70" alt="Máquina de tatuar de cerca"><span class="tag">Equipo</span></div>
+  </div>
+
+  <div class="gallery-scroll">
+    <div class="flash-card"><svg viewBox="0 0 100 100"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M50 20 L50 70 M35 35 L50 20 L65 35 M30 70 Q50 85 70 70" /></svg><span>Ancla</span></div>
+    <div class="flash-card"><svg viewBox="0 0 100 100"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M50 30 Q30 15 20 35 Q15 55 50 80 Q85 55 80 35 Q70 15 50 30 Z" /></svg><span>Corazón</span></div>
+    <div class="flash-card"><svg viewBox="0 0 100 100"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M20 60 Q35 20 50 60 T80 60 M50 60 Q45 75 50 85 Q55 75 50 60" /></svg><span>Serpiente</span></div>
+    <div class="flash-card"><svg viewBox="0 0 100 100"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M50 15 L58 42 L86 42 L63 58 L71 85 L50 68 L29 85 L37 58 L14 42 L42 42 Z" /></svg><span>Estrella</span></div>
+    <div class="flash-card"><svg viewBox="0 0 100 100"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M20 40 Q35 20 50 35 Q65 20 80 40 Q65 50 50 40 Q35 50 20 40 Z M50 40 L50 70 M40 60 L50 70 L60 60" /></svg><span>Golondrina</span></div>
+    <div class="flash-card"><svg viewBox="0 0 100 100"><path class="draw-path" style="stroke-dasharray:0;stroke-dashoffset:0" d="M50 20 A30 30 0 1 1 49 20 M35 45 L65 45 M40 55 L60 55 M42 65 L58 65" /></svg><span>Calavera</span></div>
+  </div>
+</section>
+
+<section id="testimonios">
+  <span class="eyebrow-label reveal">Lo que dicen</span>
+  <h2 class="section-title reveal">Clientes que volvieron</h2>
+
+  <div class="testi-grid">
+    <div class="testi-card reveal">
+      <span class="stars">★★★★★</span>
+      <p>"Primera vez tatuándome y me explicaron cada paso. El fine line quedó más limpio de lo que imaginé."</p>
+      <span class="who">— Juliana M., estilo fine line</span>
+    </div>
+    <div class="testi-card reveal">
+      <span class="stars">★★★★★</span>
+      <p>"Llevo tres piezas neotradicionales con el mismo artista. El nivel de detalle en el color es otro nivel."</p>
+      <span class="who">— Andrés P., estilo neotradicional</span>
+    </div>
+    <div class="testi-card reveal">
+      <span class="stars">★★★★★</span>
+      <p>"El espacio es tranquilo, el material se abre frente a vos y la cicatrización fue impecable siguiendo sus indicaciones."</p>
+      <span class="who">— Marcela G., estilo blackwork</span>
+    </div>
+  </div>
+</section>
+
+<section id="reservar">
+  <span class="eyebrow-label reveal">Agenda</span>
+  <h2 class="section-title reveal">Reservá tu sesión</h2>
+
+  <div class="book-grid">
+    <form class="reveal" onsubmit="return false;">
+      <div class="field">
+        <label for="nombre">Nombre</label>
+        <input id="nombre" type="text" placeholder="Tu nombre completo" required>
+      </div>
+      <div class="field">
+        <label for="contacto">Correo o WhatsApp</label>
+        <input id="contacto" type="text" placeholder="¿Cómo te contactamos?" required>
+      </div>
+      <div class="field">
+        <label for="estilo">Estilo de interés</label>
+        <select id="estilo">
+          <option>Fine line</option>
+          <option>Blackwork</option>
+          <option>Neotradicional</option>
+          <option>Japonés</option>
+          <option>Realismo</option>
+          <option>Lettering</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="idea">Contanos tu idea</label>
+        <textarea id="idea" placeholder="Tamaño aproximado, zona del cuerpo, referencias..."></textarea>
+      </div>
+      <button class="submit-btn" type="submit">Enviar solicitud</button>
+    </form>
+
+    <div class="info-block reveal">
+      <h3>Dirección</h3>
+      <p>Carrera 34 # 8-15, El Poblado, Medellín, Colombia</p>
+      <h3>Horario</h3>
+      <p>Martes a sábado, 11:00 a. m. — 8:00 p. m.<br>Domingo y lunes cerrado</p>
+      <h3>Instagram</h3>
+      <p>@tintayhueso.estudio</p>
+      <h3>Bioseguridad</h3>
+      <p>Agujas y tubos desechables de un solo uso, superficies desinfectadas entre cliente y cliente, autoclave certificado.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span class="brand">Tinta & Hueso</span>
+  <small>&copy; 2026 Estudio de tatuaje. Todas las agujas son de un solo uso.</small>
+</footer>
+
+<script>
+(function(){
+  var supportsTimeline = CSS && CSS.supports && (
+    CSS.supports('animation-timeline', 'view()') &&
+    CSS.supports('animation-timeline', 'scroll(root)')
+  );
+
+  // Give every draw-path a real stroke-dasharray/offset based on its actual length
+  document.querySelectorAll('.draw-path').forEach(function(path){
+    if (typeof path.getTotalLength !== 'function') return;
+    var len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+  });
+
+  if (!supportsTimeline) {
+    document.body.classList.add('no-scroll-timeline');
+
+    // Fallback: IntersectionObserver toggles .in-view for fade/translate reveals
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) entry.target.classList.add('in-view');
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+    // Fallback: icon draw-in triggered on view, animated via transition
+    var io2 = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          entry.target.style.strokeDashoffset = 0;
+          io2.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('.icon-draw').forEach(function(el){ io2.observe(el); });
+
+    // Fallback: hero artwork draws in as the page scrolls (manual scroll-driven calc)
+    var heroPaths = document.querySelectorAll('.hero-draw-path');
+    function updateHero(){
+      var progress = Math.min(1, window.scrollY / (window.innerHeight * 0.6));
+      heroPaths.forEach(function(path){
+        var len = parseFloat(path.style.strokeDasharray) || 0;
+        path.style.strokeDashoffset = len * (1 - progress);
+      });
+    }
+    window.addEventListener('scroll', updateHero, { passive: true });
+    updateHero();
+  }
+})();
+</script>
+
+</body>
+</html>
